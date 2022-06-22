@@ -34,7 +34,7 @@ public class Links extends PayPalModel {
 	/**
 	 * 
 	 */
-	private String enctype;
+	private String encType;
 
 	/**
 	 * 

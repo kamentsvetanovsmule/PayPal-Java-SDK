@@ -1,9 +1,9 @@
 package com.paypal.api.payments;
 
+import com.paypal.api.payments.enums.PlanStatus;
 import com.paypal.base.rest.*;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.Accessors;
-import lombok.Getter; import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +11,9 @@ import java.util.Map;
 @Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Plan  extends PayPalResource {
 
 	/**
@@ -19,9 +22,28 @@ public class Plan  extends PayPalResource {
 	private String id;
 
 	/**
+	 * Identifier of the product related to the plan. 50 characters max.
+	 */
+	@NonNull
+	private String productId;
+
+	/**
 	 * Name of the billing plan. 128 characters max.
 	 */
+	@NonNull
 	private String name;
+
+	/**
+	 * Definition of the billing cycles for the plan.
+	 */
+	@NonNull
+	private List<BillingCycle> billingCycles;
+
+	/**
+	 * Specific preferences such as: set up fee, max fail attempts, autobill amount, and others that are configured for this billing plan.
+	 */
+	@NonNull
+	private MerchantPreferences paymentPreferences;
 
 	/**
 	 * Description of the billing plan. 128 characters max.
@@ -29,14 +51,19 @@ public class Plan  extends PayPalResource {
 	private String description;
 
 	/**
-	 * Type of the billing plan. Allowed values: `FIXED`, `INFINITE`.
+	 * Status of the billing plan. Allowed values: `CREATED`, `ACTIVE`, `INACTIVE`.
 	 */
-	private String type;
+	private PlanStatus status;
 
 	/**
-	 * Status of the billing plan. Allowed values: `CREATED`, `ACTIVE`, `INACTIVE`, and `DELETED`.
+	 * The taxes for the plan
 	 */
-	private String state;
+	private Tax taxes;
+
+	/**
+	 * Indicates whether you can subscribe to this plan by providing a quantity for the goods or service.
+	 */
+	private boolean quantitySupported;
 
 	/**
 	 * Time when the billing plan was created. Format YYYY-MM-DDTimeTimezone, as defined in [ISO8601](http://tools.ietf.org/html/rfc3339#section-5.6).
@@ -49,55 +76,9 @@ public class Plan  extends PayPalResource {
 	private String updateTime;
 
 	/**
-	 * Array of payment definitions for this billing plan.
-	 */
-	private List<PaymentDefinition> paymentDefinitions;
-
-	/**
-	 * Array of terms for this billing plan.
-	 */
-	private List<Terms> terms;
-
-	/**
-	 * Specific preferences such as: set up fee, max fail attempts, autobill amount, and others that are configured for this billing plan.
-	 */
-	private MerchantPreferences merchantPreferences;
-
-	/**
 	 * 
 	 */
 	private List<Links> links;
-
-	/**
-	 * Default Constructor
-	 */
-	public Plan() {
-	}
-
-	/**
-	 * Parameterized Constructor
-	 */
-	public Plan(String name, String description, String type) {
-		this.name = name;
-		this.description = description;
-		this.type = type;
-	}
-
-	/**
-	 * Retrieve the details for a particular billing plan by passing the billing plan ID to the request URI.
-	 * @deprecated Please use {@link #get(APIContext, String)} instead.
-	 *
-	 * @param accessToken
-	 *            Access Token used for the API call.
-	 * @param planId
-	 *            String
-	 * @return Plan
-	 * @throws PayPalRESTException
-	 */
-	public static Plan get(String accessToken, String planId) throws PayPalRESTException {
-		APIContext apiContext = new APIContext(accessToken);
-		return get(apiContext, planId);
-	}
 
 	/**
 	 * Retrieve the details for a particular billing plan by passing the billing plan ID to the request URI.
@@ -114,25 +95,10 @@ public class Plan  extends PayPalResource {
 			throw new IllegalArgumentException("planId cannot be null");
 		}
 		Object[] parameters = new Object[] {planId};
-		String pattern = "v1/payments/billing-plans/{0}";
+		String pattern = "v1/billing/plans/{0}";
 		String resourcePath = RESTUtil.formatURIPath(pattern, parameters);
 		String payLoad = "";
 		return configureAndExecute(apiContext, HttpMethod.GET, resourcePath, payLoad, Plan.class);
-	}
-
-
-	/**
-	 * Create a new billing plan by passing the details for the plan, including the plan name, description, and type, to the request URI.
-	 * @deprecated Please use {@link #create(APIContext)} instead.
-	 *
-	 * @param accessToken
-	 *            Access Token used for the API call.
-	 * @return Plan
-	 * @throws PayPalRESTException
-	 */
-	public Plan create(String accessToken) throws PayPalRESTException {
-		APIContext apiContext = new APIContext(accessToken);
-		return create(apiContext);
 	}
 
 	/**
@@ -144,26 +110,12 @@ public class Plan  extends PayPalResource {
 	 */
 	public Plan create(APIContext apiContext) throws PayPalRESTException {
 
-		String resourcePath = "v1/payments/billing-plans";
+		String resourcePath = "v1/billing/plans";
 		String payLoad = this.toJSON();
-		return configureAndExecute(apiContext, HttpMethod.POST, resourcePath, payLoad, Plan.class);
-	}
-
-
-	/**
-	 * Replace specific fields within a billing plan by passing the ID of the billing plan to the request URI. In addition, pass a patch object in the request JSON that specifies the operation to perform, field to update, and new value for each update.
-	 * @deprecated Please use {@link #update(APIContext, List)} instead.
-	 *
-	 * @param accessToken
-	 *            Access Token used for the API call.
-	 * @param patchRequest
-	 *            PatchRequest
-	 * @throws PayPalRESTException
-	 */
-	public void update(String accessToken, List<Patch> patchRequest) throws PayPalRESTException {
-		APIContext apiContext = new APIContext(accessToken);
-		update(apiContext, patchRequest);
-		return;
+		apiContext.setRequestId(this.getProductId()+this.getDescription());
+		Plan createdPlan = configureAndExecute(apiContext, HttpMethod.POST, resourcePath, payLoad, Plan.class);
+		apiContext.setRequestId(null);
+		return createdPlan;
 	}
 
 	/**
@@ -183,28 +135,11 @@ public class Plan  extends PayPalResource {
 			throw new IllegalArgumentException("patchRequest cannot be null");
 		}
 		Object[] parameters = new Object[] {this.getId()};
-		String pattern = "v1/payments/billing-plans/{0}";
+		String pattern = "v1/billing/plans/{0}";
 		String resourcePath = RESTUtil.formatURIPath(pattern, parameters);
 		String payLoad = JSONFormatter.toJSON(patchRequest);
 		configureAndExecute(apiContext, HttpMethod.PATCH, resourcePath, payLoad, null);
 		return;
-	}
-
-
-	/**
-	 * List billing plans according to optional query string parameters specified.
-	 * @deprecated Please use {@link #list(APIContext, Map)} instead.
-	 *
-	 * @param accessToken
-	 *            Access Token used for the API call.
-	 * @param containerMap
-	 *            Map<String, String>
-	 * @return PlanList
-	 * @throws PayPalRESTException
-	 */
-	public static PlanList list(String accessToken, Map<String, String> containerMap) throws PayPalRESTException {
-		APIContext apiContext = new APIContext(accessToken);
-		return list(apiContext, containerMap);
 	}
 
 	/**
@@ -222,7 +157,7 @@ public class Plan  extends PayPalResource {
 			throw new IllegalArgumentException("containerMap cannot be null");
 		}
 		Object[] parameters = new Object[] {containerMap};
-		String pattern = "v1/payments/billing-plans?page_size={0}&status={1}&page={2}&total_required={3}";
+		String pattern = "v1/billing/plans?page_size={0}&page={1}&total_required={2}";
 		String resourcePath = RESTUtil.formatURIPath(pattern, parameters);
 		String payLoad = "";
 		PlanList plans = configureAndExecute(apiContext, HttpMethod.GET, resourcePath, payLoad, PlanList.class);

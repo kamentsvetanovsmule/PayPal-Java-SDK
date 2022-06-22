@@ -10,16 +10,11 @@ import lombok.experimental.Accessors;
 @Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
-public class Phone extends PayPalModel {
+public class PhoneNumber extends PayPalModel {
 
 	/**
-	 * The phone type.
+	 * The national number, in its canonical international E.164 numbering plan format
 	 */
-	private PhoneType phoneType;
-
-	/**
-	 * The phone number, in its canonical international E.164 numbering plan format
-	 */
-	private PhoneNumber phoneNumber;
+	private String nationalNumber;
 
 }

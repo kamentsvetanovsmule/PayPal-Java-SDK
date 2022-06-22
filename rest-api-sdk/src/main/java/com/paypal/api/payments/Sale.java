@@ -14,16 +14,6 @@ import java.util.List;
 public class Sale extends PayPalResource {
 
 	/**
-	 * Identifier of the sale transaction.
-	 */
-	private String id;
-
-	/**
-	 * Identifier to the purchase or transaction unit corresponding to this sale transaction.
-	 */
-	private String purchaseUnitReferenceId;
-
-	/**
 	 * Amount being collected.
 	 */
 	private Amount amount;
@@ -34,24 +24,64 @@ public class Sale extends PayPalResource {
 	private String paymentMode;
 
 	/**
-	 * State of the sale transaction.
+	 * Time of sale as defined in [RFC 3339 Section 5.6](http://tools.ietf.org/html/rfc3339#section-5.6)
 	 */
-	private String state;
+	private String createTime;
 
 	/**
-	 * Reason code for the transaction state being Pending or Reversed. Only supported when the `payment_method` is set to `paypal`.
+	 * The customId of the subscription
 	 */
-	private String reasonCode;
+	private String custom;
 
 	/**
-	 * The level of seller protection in force for the transaction. Only supported when the `payment_method` is set to `paypal`. 
+	 * Transaction fee applicable for this payment.
 	 */
-	private String protectionEligibility;
+	private SaleCurrency transactionFee;
+
+	/**
+	 * ID of the billing agreement used as reference to execute this transaction.
+	 */
+	private String billingAgreementId;
+
+	/**
+	 * Time the resource was last updated in UTC ISO8601 format.
+	 */
+	private String updateTime;
 
 	/**
 	 * The kind of seller protection in force for the transaction. It is returned only when protection_eligibility is ELIGIBLE or PARTIALLY_ELIGIBLE. Only supported when the `payment_method` is set to `paypal`.
 	 */
 	private String protectionEligibilityType;
+
+	/**
+	 * The level of seller protection in force for the transaction. Only supported when the `payment_method` is set to `paypal`.
+	 */
+	private String protectionEligibility;
+
+	/**
+	 * Identifier of the sale transaction.
+	 */
+	private String id;
+
+	/**
+	 * State of the sale transaction.
+	 */
+	private String state;
+
+	/**
+	 * The invoice number of the sale
+	 */
+	private String invoiceNumber;
+
+	/**
+	 * Identifier to the purchase or transaction unit corresponding to this sale transaction.
+	 */
+	private String purchaseUnitReferenceId;
+
+	/**
+	 * Reason code for the transaction state being Pending or Reversed. Only supported when the `payment_method` is set to `paypal`.
+	 */
+	private String reasonCode;
 
 	/**
 	 * Expected clearing time for eCheck Transactions. Returned when payment is made with eCheck. Only supported when the `payment_method` is set to `paypal`.
@@ -67,11 +97,6 @@ public class Sale extends PayPalResource {
 	 * Reasons for PayPal holding recipient fund. It is set only if payment hold status is held
 	 */
 	private List<String> paymentHoldReasons;
-
-	/**
-	 * Transaction fee applicable for this payment.
-	 */
-	private Currency transactionFee;
 
 	/**
 	 * Net amount the merchant receives for this transaction in their receivable currency. Returned only in cross-currency use cases where a merchant bills a buyer in a non-primary currency for that buyer.
@@ -102,21 +127,6 @@ public class Sale extends PayPalResource {
 	 * Response codes returned by the processor concerning the submitted payment. Only supported when the `payment_method` is set to `credit_card`.
 	 */
 	private ProcessorResponse processorResponse;
-
-	/**
-	 * ID of the billing agreement used as reference to execute this transaction.
-	 */
-	private String billingAgreementId;
-
-	/**
-	 * Time of sale as defined in [RFC 3339 Section 5.6](http://tools.ietf.org/html/rfc3339#section-5.6)
-	 */
-	private String createTime;
-
-	/**
-	 * Time the resource was last updated in UTC ISO8601 format.
-	 */
-	private String updateTime;
 
 	/**
 	 * 

@@ -1,47 +1,24 @@
 package com.paypal.api.payments;
 
 import com.paypal.base.rest.PayPalModel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 @Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
+@RequiredArgsConstructor
+@NoArgsConstructor
 public class Tax extends PayPalModel {
 
 	/**
-	 * The resource ID.
+	 * The tax percentage on the billing amount.
 	 */
-	private String id;
+	@NonNull
+	private String percentage;
 
 	/**
-	 * The tax name. Maximum length is 20 characters.
+	 * Indicates whether the tax was already included in the billing amount.
 	 */
-	private String name;
-
-	/**
-	 * The rate of the specified tax. Valid range is from 0.001 to 99.999.
-	 */
-	private double percent;
-
-	/**
-	 * The tax as a monetary amount. Cannot be specified in a request.
-	 */
-	private Currency amount;
-
-	/**
-	 * Default Constructor
-	 */
-	public Tax() {
-	}
-
-	/**
-	 * Parameterized Constructor
-	 */
-	public Tax(String name, float percent) {
-		this.name = name;
-		this.percent = percent;
-	}
+	private boolean inclusive;
 }

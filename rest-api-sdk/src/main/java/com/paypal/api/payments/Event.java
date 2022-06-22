@@ -1,20 +1,21 @@
 package com.paypal.api.payments;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 import com.paypal.base.Constants;
 import com.paypal.base.SDKUtil;
-import com.paypal.base.SSLUtil;
 import com.paypal.base.rest.*;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.Getter; import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,19 +33,34 @@ public class Event  extends PayPalResource {
 	private String id;
 
 	/**
+	 * Name of the event version that occurred on resource, identified by data_resource element, to trigger the Webhooks event.
+	 */
+	@SerializedName("event_version")
+	private String eventVersion;
+
+	/**
 	 * Time the resource was created.
 	 */
+	@SerializedName("create_time")
 	private String createTime;
 
 	/**
 	 * Name of the resource contained in resource element.
 	 */
+	@SerializedName("resource_type")
 	private String resourceType;
 
 	/**
 	 * Name of the event type that occurred on resource, identified by data_resource element, to trigger the Webhooks event.
 	 */
+	@SerializedName("event_type")
 	private String eventType;
+
+	/**
+	 * Resource version of the resource element.
+	 */
+	@SerializedName("resource_version")
+	private String resourceVersion;
 
 	/**
 	 * A summary description of the event. E.g. A successful payment authorization was created for $$
@@ -166,11 +182,11 @@ public class Event  extends PayPalResource {
 		String payLoad = "";
 		return configureAndExecute(apiContext, HttpMethod.GET, resourcePath, payLoad, EventList.class);
 	}
-	
+
 	/**
 	 * Validates received event received from PayPal to webhook endpoint set for particular webhook Id with PayPal trust source, to verify Data and Certificate integrity.
-	 * It validates both certificate chain, as well as data integrity. 
-	 * 
+	 * It validates both certificate chain, as well as data integrity.
+	 *
 	 * @param apiContext APIContext object
 	 * @param headers Map of Headers received in the event, from request
 	 * @param requestBody Request body received in the provided webhook
@@ -186,48 +202,23 @@ public class Event  extends PayPalResource {
 			throw new PayPalRESTException("Headers cannot be null");
 		}
 
-		Map<String, String> cmap;
-		Boolean isChainValid = false, isDataValid = false;
-		Collection<X509Certificate> trustCerts, clientCerts;
+		Map<String, String> cmap = getConfigurations(apiContext);
 
-		// Load the configurations from all possible sources
-		cmap = getConfigurations(apiContext);
+			Gson gson = new Gson();
+			Event event = gson.fromJson(requestBody, Event.class);
+			JsonObject validationObject = new JsonObject();
+			validationObject.addProperty("webhook_id", SDKUtil.validateAndGet(cmap, Constants.PAYPAL_WEBHOOK_ID));
+			validationObject.add("webhook_event", gson.toJsonTree(event));
+			validationObject.addProperty("auth_algo", SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_AUTH_ALGO));
+			validationObject.addProperty("cert_url",  SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_CERT_URL));
+			validationObject.addProperty("transmission_id",  SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_ID));
+			validationObject.addProperty("transmission_sig",  SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_SIG));
+			validationObject.addProperty("transmission_time",  SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_TIME));
 
-		// Fetch Certificate Locations
-		String clientCertificateLocation = SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_CERT_URL);
-		// Default to `DigiCertSHA2ExtendedValidationServerCA` if none provided
-		if (cmap != null && !cmap.containsKey(Constants.PAYPAL_TRUST_CERT_URL)) {
-			cmap.put(Constants.PAYPAL_TRUST_CERT_URL, Constants.PAYPAL_TRUST_DEFAULT_CERT);
-		}
-		String trustCertificateLocation = SDKUtil.validateAndGet(cmap, Constants.PAYPAL_TRUST_CERT_URL);
-
-		// Load certificates
-		clientCerts = SSLUtil.getCertificateFromStream(SSLUtil.downloadCertificateFromPath(clientCertificateLocation, cmap));
-		trustCerts = SSLUtil.getCertificateFromStream(Event.class.getClassLoader().getResourceAsStream(trustCertificateLocation));
-
-		// Check if Chain Valid
-		isChainValid = SSLUtil.validateCertificateChain(clientCerts, trustCerts, SDKUtil.validateAndGet(cmap, Constants.PAYPAL_WEBHOOK_CERTIFICATE_AUTHTYPE));
-
-		log.debug("Is Chain Valid: " + isChainValid);
-		if (isChainValid) {
-			// If Chain Valid, check for data signature valid
-			// Lets check for data now
-			String webhookId = SDKUtil.validateAndGet(cmap, Constants.PAYPAL_WEBHOOK_ID);
-			String actualSignatureEncoded = SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_SIG);
-			String authAlgo = SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_AUTH_ALGO);
-			String transmissionId = SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_ID);
-			String transmissionTime = SDKUtil.validateAndGet(headers, Constants.PAYPAL_HEADER_TRANSMISSION_TIME);
-			String expectedSignature = String.format("%s|%s|%s|%s", transmissionId, transmissionTime, webhookId, SSLUtil.crc32(requestBody));
-
-			// Validate Data
-			isDataValid = SSLUtil.validateData(clientCerts, authAlgo, actualSignatureEncoded, expectedSignature, requestBody, webhookId);
-
-			log.debug("Is Data Valid: " + isDataValid);
-			// Return true if both data and chain valid
-			return isDataValid;
-		}
-
-		return false;
+			String resourcePath = "/v1/notifications/verify-webhook-signature";
+			String payLoad = validationObject.toString();
+			String result = configureAndExecute(apiContext, HttpMethod.POST, resourcePath, payLoad, String.class);
+			return result.contains("SUCCESS");
 	}
 
 	/**

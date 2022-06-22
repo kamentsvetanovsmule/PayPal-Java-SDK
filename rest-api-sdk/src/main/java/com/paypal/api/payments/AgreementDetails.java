@@ -2,12 +2,16 @@ package com.paypal.api.payments;
 
 import com.paypal.base.rest.PayPalModel;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.Getter; import lombok.Setter;
+
+import java.util.List;
 
 @Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
+@NoArgsConstructor
 public class AgreementDetails  extends PayPalModel {
 
 	/**
@@ -16,24 +20,24 @@ public class AgreementDetails  extends PayPalModel {
 	private Currency outstandingBalance;
 
 	/**
-	 * Number of cycles remaining for this agreement.
+	 * The trial and regular billing executions.
 	 */
-	private String cyclesRemaining;
+	private List<CycleExecution> cycleExecutions;
 
 	/**
-	 * Number of cycles completed for this agreement.
+	 * The details for the last payment of the subscription.
 	 */
-	private String cyclesCompleted;
+	private LastPaymentDetails lastPayment;
+
+	/**
+	 * The details for the last payment of the subscription.
+	 */
+	private FailedPaymentDetails lastFailedPayment;
 
 	/**
 	 * The next billing date for this agreement, represented as 2014-02-19T10:00:00Z format.
 	 */
-	private String nextBillingDate;
-
-	/**
-	 * Last payment date for this agreement, represented as 2014-06-09T09:42:31Z format.
-	 */
-	private String lastPaymentDate;
+	private String nextBillingTime;
 
 	/**
 	 * Last payment amount for this agreement.
@@ -43,16 +47,10 @@ public class AgreementDetails  extends PayPalModel {
 	/**
 	 * Last payment date for this agreement, represented as 2015-02-19T10:00:00Z format.
 	 */
-	private String finalPaymentDate;
+	private String finalPaymentTime;
 
 	/**
 	 * Total number of failed payments for this agreement.
 	 */
-	private String failedPaymentCount;
-
-	/**
-	 * Default Constructor
-	 */
-	public AgreementDetails() {
-	}
+	private int failedPaymentsCount;
 }
