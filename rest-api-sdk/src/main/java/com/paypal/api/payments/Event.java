@@ -51,16 +51,16 @@ public class Event  extends PayPalResource {
 	private String resourceType;
 
 	/**
-	 * Name of the event type that occurred on resource, identified by data_resource element, to trigger the Webhooks event.
-	 */
-	@SerializedName("event_type")
-	private String eventType;
-
-	/**
 	 * Resource version of the resource element.
 	 */
 	@SerializedName("resource_version")
 	private String resourceVersion;
+
+	/**
+	 * Name of the event type that occurred on resource, identified by data_resource element, to trigger the Webhooks event.
+	 */
+	@SerializedName("event_type")
+	private String eventType;
 
 	/**
 	 * A summary description of the event. E.g. A successful payment authorization was created for $$
