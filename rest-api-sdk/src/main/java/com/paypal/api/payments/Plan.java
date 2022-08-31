@@ -112,7 +112,8 @@ public class Plan  extends PayPalResource {
 
 		String resourcePath = "v1/billing/plans";
 		String payLoad = this.toJSON();
-		apiContext.setRequestId(this.getProductId()+this.getDescription());
+		BillingCycle cycle = this.getBillingCycles().get(0);
+		apiContext.setRequestId(this.getProductId()+cycle.getTotalCycles()+cycle.getFrequency()+cycle.getPricingScheme().getFixedPrice().getCurrencyCode()+cycle.getPricingScheme().getFixedPrice().getValue());
 		Plan createdPlan = configureAndExecute(apiContext, HttpMethod.POST, resourcePath, payLoad, Plan.class);
 		apiContext.setRequestId(null);
 		return createdPlan;

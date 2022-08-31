@@ -17,6 +17,11 @@ public class Address extends PayPalModel {
 	private String addressLine1;
 
 	/**
+	 * Line 2 of the Address (eg. apartment, suite, unit number, etc).
+	 */
+	private String addressLine2;
+
+	/**
 	 * Optional line 2 of the Address (eg. suite, apt #, etc.).
 	 */
 	private String adminArea2;
