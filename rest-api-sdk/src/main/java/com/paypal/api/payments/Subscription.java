@@ -10,6 +10,8 @@ import lombok.Getter; import lombok.Setter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @Getter @Setter
@@ -159,12 +161,12 @@ public class Subscription  extends PayPalResource {
 		return;
 	}
 
-	public AgreementTransactions getTransactions(APIContext apiContext) throws PayPalRESTException {
+	public AgreementTransactions getTransactions(APIContext apiContext, String startTime, String endTime) throws PayPalRESTException {
 		if (this.getId() == null) {
 			throw new IllegalArgumentException("Id cannot be null");
 		}
-		Object[] parameters = new Object[] {this.getId()};
-		String pattern = "/v1/billing/subscriptions/{0}/transactions";
+		Object[] parameters = new Object[] {this.getId(), startTime, endTime};
+		String pattern = "/v1/billing/subscriptions/{0}/transactions?start_time={1}&end_time={2}";
 		String resourcePath = RESTUtil.formatURIPath(pattern, parameters);
 		String payLoad = "";
 		return configureAndExecute(apiContext, HttpMethod.GET, resourcePath, payLoad, AgreementTransactions.class);
