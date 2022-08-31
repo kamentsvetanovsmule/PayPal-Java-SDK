@@ -16,12 +16,12 @@ public class AgreementTransactions  extends PayPalModel {
 	/**
 	 * Array of agreement_transaction object.
 	 */
-	private List<AgreementTransaction> agreementTransactionList;
+	private List<AgreementTransaction> transactions;
 
 	/**
 	 * Default Constructor
 	 */
 	public AgreementTransactions() {
-		agreementTransactionList = new ArrayList<AgreementTransaction>();
+		transactions = new ArrayList<AgreementTransaction>();
 	}
 }

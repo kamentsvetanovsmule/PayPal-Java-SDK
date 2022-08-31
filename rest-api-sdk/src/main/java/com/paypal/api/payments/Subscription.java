@@ -159,4 +159,15 @@ public class Subscription  extends PayPalResource {
 		return;
 	}
 
+	public AgreementTransactions getTransactions(APIContext apiContext) throws PayPalRESTException {
+		if (this.getId() == null) {
+			throw new IllegalArgumentException("Id cannot be null");
+		}
+		Object[] parameters = new Object[] {this.getId()};
+		String pattern = "/v1/billing/subscriptions/{0}/transactions";
+		String resourcePath = RESTUtil.formatURIPath(pattern, parameters);
+		String payLoad = "";
+		return configureAndExecute(apiContext, HttpMethod.GET, resourcePath, payLoad, AgreementTransactions.class);
+	}
+
 }
